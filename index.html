@@ -7,10 +7,14 @@
     <style>
         body { background-color: #f8f9fa; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
         .container { max-width: 950px; margin: auto; }
-        h2 { text-align: center; margin-bottom: 25px; color: #333; }
-        .card { background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 25px; overflow: hidden; }
         
-        /* Perbaikan Header agar Flexbox rapi dan tidak menumpuk */
+        /* Bagian Header Instansi & Logo */
+        .app-header { text-align: center; margin-bottom: 30px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .app-header img { width: 70px; height: auto; margin-bottom: 10px; }
+        .app-header h1 { font-size: 20px; margin: 5px 0; color: #333; font-weight: bold; text-transform: uppercase; }
+        .app-header p { font-size: 15px; margin: 0; color: #555; font-weight: 600; }
+
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 25px; overflow: hidden; }
         .card-header { padding: 12px 20px; font-weight: bold; color: #fff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .bg-primary { background-color: #0d6efd; }
         .bg-secondary { background-color: #6c757d; }
@@ -19,8 +23,6 @@
         .mb-3 { margin-bottom: 15px; }
         .form-label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
         .form-control { width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
-        
-        /* Perbaikan ukuran kotak pencarian agar proporsional */
         .search-box { width: 260px !important; padding: 6px 12px; font-size: 13px; border-radius: 4px; border: 1px solid #ced4da; }
         
         textarea.form-control { resize: vertical; height: 80px; }
@@ -40,7 +42,13 @@
 </head>
 <body>
     <div class="container">
-        <h2>Manajemen Data Putusan Perkara</h2>
+        <!-- Header dengan Logo dan Teks Instansi -->
+        <div class="app-header">
+            <!-- Ganti src="" dengan link gambar logo atau nama file logo Anda di GitHub -->
+            <img src="https://github.com/pidanasdk-star/Putusan-Perkara-PT/blob/main/LOGO.png">
+            <h1>Pengadilan Negeri Sidikalang</h1>
+            <p>Kepaniteraan Pidana</p>
+        </div>
         
         <!-- Form Input & Edit -->
         <div class="card">
@@ -106,16 +114,12 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyiN70QKr2zVtW_lcGAJ7C-qvKgocwmjYx2MHD4NKRwseIMss4ZuKcYkTGIcAppkh666Q/exec';
         let allData = [];
 
-        // Fungsi pembersih format tanggal agar mutlak bersih dari jam/menit/Z
         function formatDate(dateString) {
             if (!dateString) return '';
-            
-            // Jika string mengandung huruf 'T' (format ISO dari Spreadsheet), ambil bagian depannya saja
             let str = dateString.toString();
             if (str.includes('T')) {
                 return str.split('T')[0];
             }
-            
             let d = new Date(dateString);
             if (!isNaN(d.getTime())) {
                 let year = d.getFullYear();
