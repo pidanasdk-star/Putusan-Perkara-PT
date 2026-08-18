@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi CRUD - Database Spreadsheet</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="[https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css](https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css)" rel="stylesheet">
 </head>
 <body class="bg-light">
     <div class="container my-5">
@@ -42,9 +42,12 @@
             </div>
         </div>
 
-        <!-- Tabel Tampilan Data -->
+        <!-- Tabel Tampilan Data & Fitur Pencarian -->
         <div class="card shadow">
-            <div class="card-header bg-secondary text-white">Daftar Data Perkara</div>
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <span>Daftar Data Perkara</span>
+                <input type="text" id="searchInput" class="form-control form-control-sm w-25" placeholder="Cari No Perkara / Terdakwa..." onkeyup="filterData()">
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped align-middle">
@@ -68,250 +71,7 @@
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbyiN70QKr2zVtW_lcGAJ7C-qvKgocwmjYx2MHD4NKRwseIMss4ZuKcYkTGIcAppkh666Q/exec';
+        const scriptURL = '[https://script.google.com/macros/s/AKfycbyiN70QKr2zVtW_lcGAJ7C-qvKgocwmjYx2MHD4NKRwseIMss4ZuKcYkTGIcAppkh666Q/exec](https://script.google.com/macros/s/AKfycbyiN70QKr2zVtW_lcGAJ7C-qvKgocwmjYx2MHD4NKRwseIMss4ZuKcYkTGIcAppkh666Q/exec)';
+        let allData = []; // Menyimpan data sementara untuk pencarian
 
-        document.getElementById('crudForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const id = document.getElementById('id').value;
-            const data = {
-                action: id ? 'update' : 'create',
-                id: id,
-                no_perkara: document.getElementById('no_perkara').value,
-                nama_terdakwa: document.getElementById('nama_terdakwa').value,
-                tanggal_putusan_pt: document.getElementById('tanggal_putusan_pt').value,
-                tanggal_perubahan_pt: document.getElementById('tanggal_perubahan_pt').value,
-                keterangan: document.getElementById('keterangan').value
-            };
-
-            fetch(scriptURL, {
-                method: 'POST',
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                alert('Data berhasil disimpan!');
-                resetForm();
-                loadData();
-            })
-            .catch(error => {
-                console.error('Error!', error.message);
-                alert('Terjadi kesalahan saat menyimpan data.');
-            });
-        });
-
-        function loadData() {
-            fetch(scriptURL + '?action=read')
-            .then(response => response.json())
-            .then(data => {
-                let rows = '';
-                if (!data || data.length === 0) {
-                    rows = '<tr><td colspan="6" class="text-center">Belum ada data</td></tr>';
-                } else {
-                    data.forEach(item => {
-                        let itemString = JSON.stringify(item).replace(/"/g, '&quot;');
-                        rows += `<tr>
-                            <td>${item['No Perkara'] || ''}</td>
-                            <td>${item['Nama Terdakwa'] || ''}</td>
-                            <td>${item['Tanggal Putusan PT'] || ''}</td>
-                            <td>${item['Tanggal Perubahan Putusan PT'] || ''}</td>
-                            <td>${item['Keterangan'] || ''}</td>
-                            <td>
-                                <button class="btn btn-warning btn-sm mb-1" onclick='editData(${itemString})'>Edit</button>
-                                <button class="btn btn-danger btn-sm mb-1" onclick="deleteData('${item['ID']}')">Hapus</button>
-                            </td>
-                        </tr>`;
-                    });
-                }
-                document.getElementById('table-data').innerHTML = rows;
-            })
-            .catch(error => {
-                console.error('Error loading data:', error);
-                document.getElementById('table-data').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Gagal memuat data</td></tr>';
-            });
-        }
-
-        function editData(item) {
-            document.getElementById('id').value = item['ID'] || '';
-            document.getElementById('no_perkara').value = item['No Perkara'] || '';
-            document.getElementById('nama_terdakwa').value = item['Nama Terdakwa'] || '';
-            document.getElementById('tanggal_putusan_pt').value = item['Tanggal Putusan PT'] || '';
-            document.getElementById('tanggal_perubahan_pt').value = item['Tanggal Perubahan Putusan PT'] || '';
-            document.getElementById('keterangan').value = item['Keterangan'] || '';
-            
-            document.getElementById('form-title').innerText = 'Edit Data Perkara';
-            document.getElementById('save-btn').innerText = 'Update';
-            document.getElementById('save-btn').className = 'btn btn-warning';
-            document.getElementById('cancel-btn').style.display = 'inline-block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function resetForm() {
-            document.getElementById('crudForm').reset();
-            document.getElementById('id').value = '';
-            document.getElementById('form-title').innerText = 'Tambah Data Baru';
-            document.getElementById('save-btn').innerText = 'Simpan';
-            document.getElementById('save-btn').className = 'btn btn-success';
-            document.getElementById('cancel-btn').style.display = 'none';
-        }
-
-        function deleteData(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-                fetch(scriptURL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'delete', id: id })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    alert('Data berhasil dihapus!');
-                    loadData();
-                })
-                .catch(error => console.error('Error deleting:', error));
-            }
-        }
-
-        loadData();
-
-
-
-        <div class="card shadow">
-    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-        <span>Daftar Data Perkara</span>
-        <input type="text" id="searchInput" class="form-control form-control-sm w-25" placeholder="Cari No Perkara / Terdakwa..." onkeyup="filterData()">
-    </div>
-    <div class="card-body">
-        ```
-
----
-
-### 2. Perbarui Fungsi JavaScript untuk Mendukung Pencarian
-Agar fungsi pencarian ini bekerja secara otomatis saat Anda mengetik nama atau nomor perkara, simpan seluruh data mentah dari server, lalu lakukan filter. 
-
-Ganti seluruh isi tag `<script>` di file `index.html` Anda dengan kode lengkap yang sudah diperbarui berikut ini:
-
-```html
-<script>
-    const scriptURL = 'URL_WEB_APP_ANDA'; // Ganti dengan URL Web App Anda
-    let allData = []; // Menyimpan data sementara untuk pencarian
-
-    document.getElementById('crudForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const id = document.getElementById('id').value;
-        const data = {
-            action: id ? 'update' : 'create',
-            id: id,
-            no_perkara: document.getElementById('no_perkara').value,
-            nama_terdakwa: document.getElementById('nama_terdakwa').value,
-            tanggal_putusan_pt: document.getElementById('tanggal_putusan_pt').value,
-            tanggal_perubahan_pt: document.getElementById('tanggal_perubahan_pt').value,
-            keterangan: document.getElementById('keterangan').value
-        };
-
-        fetch(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(result => {
-            alert('Data berhasil disimpan!');
-            resetForm();
-            loadData();
-        })
-        .catch(error => {
-            console.error('Error!', error.message);
-            alert('Terjadi kesalahan saat menyimpan data.');
-        });
-    });
-
-    function loadData() {
-        fetch(scriptURL + '?action=read')
-        .then(response => response.json())
-        .then(data => {
-            allData = data || []; // Simpan data ke variabel global
-            renderTable(allData);
-        })
-        .catch(error => {
-            console.error('Error loading data:', error);
-            document.getElementById('table-data').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Gagal memuat data</td></tr>';
-        });
-    }
-
-    // Fungsi untuk menampilkan data ke dalam tabel
-    function renderTable(data) {
-        let rows = '';
-        if (data.length === 0) {
-            rows = '<tr><td colspan="6" class="text-center">Tidak ada data ditemukan</td></tr>';
-        } else {
-            data.forEach(item => {
-                let itemString = JSON.stringify(item).replace(/"/g, '&quot;');
-                rows += `<tr>
-                    <td>${item['No Perkara'] || ''}</td>
-                    <td>${item['Nama Terdakwa'] || ''}</td>
-                    <td>${item['Tanggal Putusan PT'] || ''}</td>
-                    <td>${item['Tanggal Perubahan Putusan PT'] || ''}</td>
-                    <td>${item['Keterangan'] || ''}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm mb-1" onclick='editData(${itemString})'>Edit</button>
-                        <button class="btn btn-danger btn-sm mb-1" onclick="deleteData('${item['ID']}')">Hapus</button>
-                    </td>
-                </tr>`;
-            });
-        }
-        document.getElementById('table-data').innerHTML = rows;
-    }
-
-    // Fungsi Filter/Pencarian Berdasarkan No Perkara dan Nama Terdakwa
-    function filterData() {
-        let keyword = document.getElementById('searchInput').value.toLowerCase();
-        let filtered = allData.filter(item => {
-            let noPerkara = (item['No Perkara'] || '').toLowerCase();
-            let namaTerdakwa = (item['Nama Terdakwa'] || '').toLowerCase();
-            return noPerkara.includes(keyword) || namaTerdakwa.includes(keyword);
-        });
-        renderTable(filtered);
-    }
-
-    function editData(item) {
-        document.getElementById('id').value = item['ID'] || '';
-        document.getElementById('no_perkara').value = item['No Perkara'] || '';
-        document.getElementById('nama_terdakwa').value = item['Nama Terdakwa'] || '';
-        document.getElementById('tanggal_putusan_pt').value = item['Tanggal Putusan PT'] || '';
-        document.getElementById('tanggal_perubahan_pt').value = item['Tanggal Perubahan Putusan PT'] || '';
-        document.getElementById('keterangan').value = item['Keterangan'] || '';
-        
-        document.getElementById('form-title').innerText = 'Edit Data Perkara';
-        document.getElementById('save-btn').innerText = 'Update';
-        document.getElementById('save-btn').className = 'btn btn-warning';
-        document.getElementById('cancel-btn').style.display = 'inline-block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function resetForm() {
-        document.getElementById('crudForm').reset();
-        document.getElementById('id').value = '';
-        document.getElementById('form-title').innerText = 'Tambah Data Baru';
-        document.getElementById('save-btn').innerText = 'Simpan';
-        document.getElementById('save-btn').className = 'btn btn-success';
-        document.getElementById('cancel-btn').style.display = 'none';
-    }
-
-    function deleteData(id) {
-        if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-            fetch(scriptURL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'delete', id: id })
-            })
-            .then(response => response.json())
-            .then(result => {
-                alert('Data berhasil dihapus!');
-                loadData();
-            })
-            .catch(error => console.error('Error deleting:', error));
-        }
-    }
-
-    // Panggil fungsi loadData saat pertama kali halaman dibuka
-    loadData();
-
-    </script>
-</body>
-</html>
+        document.getElementById('crudForm').
