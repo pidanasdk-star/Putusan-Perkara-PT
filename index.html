@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi CRUD - Database Spreadsheet</title>
-    <!-- CSS Internal untuk mengantisipasi pemblokiran jaringan kantor -->
+    <!-- CSS Internal untuk desain rapi -->
     <style>
         body { background-color: #f8f9fa; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: auto; }
@@ -101,6 +101,21 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyiN70QKr2zVtW_lcGAJ7C-qvKgocwmjYx2MHD4NKRwseIMss4ZuKcYkTGIcAppkh666Q/exec';
         let allData = [];
 
+        // Fungsi helper untuk merapikan format tanggal (membuang jam/menit jika ada)
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            // Jika berbentuk objek tanggal atau ISO string, potong bagian jamnya
+            let d = new Date(dateString);
+            if (!isNaN(d.getTime())) {
+                let year = d.getFullYear();
+                let month = String(d.getMonth() + 1).padStart(2, '0');
+                let day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            // Jika sudah teks biasa, ambil bagian depannya saja sebelum spasi (jika ada)
+            return dateString.toString().split('T')[0].split(' ')[0];
+        }
+
         document.getElementById('crudForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const id = document.getElementById('id').value;
@@ -150,11 +165,14 @@
             } else {
                 data.forEach(item => {
                     let itemString = JSON.stringify(item).replace(/"/g, '&quot;');
+                    let tglPutusan = formatDate(item['Tanggal Putusan PT']);
+                    let tglPerubahan = formatDate(item['Tanggal Perubahan Putusan PT']);
+
                     rows += `<tr>
                         <td>${item['No Perkara'] || ''}</td>
                         <td>${item['Nama Terdakwa'] || ''}</td>
-                        <td>${item['Tanggal Putusan PT'] || ''}</td>
-                        <td>${item['Tanggal Perubahan Putusan PT'] || ''}</td>
+                        <td>${tglPutusan}</td>
+                        <td>${tglPerubahan}</td>
                         <td>${item['Keterangan'] || ''}</td>
                         <td>
                             <button class="btn btn-warning btn-sm" onclick='editData(${itemString})'>Edit</button>
@@ -180,8 +198,8 @@
             document.getElementById('id').value = item['ID'] || '';
             document.getElementById('no_perkara').value = item['No Perkara'] || '';
             document.getElementById('nama_terdakwa').value = item['Nama Terdakwa'] || '';
-            document.getElementById('tanggal_putusan_pt').value = item['Tanggal Putusan PT'] || '';
-            document.getElementById('tanggal_perubahan_pt').value = item['Tanggal Perubahan Putusan PT'] || '';
+            document.getElementById('tanggal_putusan_pt').value = formatDate(item['Tanggal Putusan PT']);
+            document.getElementById('tanggal_perubahan_pt').value = formatDate(item['Tanggal Perubahan Putusan PT']);
             document.getElementById('keterangan').value = item['Keterangan'] || '';
             
             document.getElementById('form-title').innerText = 'Edit Data Perkara';
