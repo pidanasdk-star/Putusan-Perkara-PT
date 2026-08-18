@@ -4,20 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi CRUD - Database Spreadsheet</title>
-    <!-- CSS Internal untuk desain rapi -->
     <style>
         body { background-color: #f8f9fa; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; }
+        .container { max-width: 950px; margin: auto; }
         h2 { text-align: center; margin-bottom: 25px; color: #333; }
         .card { background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 25px; overflow: hidden; }
-        .card-header { padding: 12px 20px; font-weight: bold; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Perbaikan Header agar Flexbox rapi dan tidak menumpuk */
+        .card-header { padding: 12px 20px; font-weight: bold; color: #fff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .bg-primary { background-color: #0d6efd; }
         .bg-secondary { background-color: #6c757d; }
+        
         .card-body { padding: 20px; }
         .mb-3 { margin-bottom: 15px; }
         .form-label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
         .form-control { width: 100%; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
-        .form-control-sm { padding: 5px 10px; font-size: 13px; width: 250px !important; }
+        
+        /* Perbaikan ukuran kotak pencarian agar proporsional */
+        .search-box { width: 260px !important; padding: 6px 12px; font-size: 13px; border-radius: 4px; border: 1px solid #ced4da; }
+        
         textarea.form-control { resize: vertical; height: 80px; }
         .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
         .btn-success { background-color: #198754; color: #fff; }
@@ -73,7 +78,7 @@
         <div class="card">
             <div class="card-header bg-secondary">
                 <span>Daftar Data Perkara</span>
-                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Cari No Perkara / Terdakwa..." onkeyup="filterData()">
+                <input type="text" id="searchInput" class="search-box" placeholder="Cari No Perkara / Terdakwa..." onkeyup="filterData()">
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -101,10 +106,16 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbyiN70QKr2zVtW_lcGAJ7C-qvKgocwmjYx2MHD4NKRwseIMss4ZuKcYkTGIcAppkh666Q/exec';
         let allData = [];
 
-        // Fungsi helper untuk merapikan format tanggal (membuang jam/menit jika ada)
+        // Fungsi pembersih format tanggal agar mutlak bersih dari jam/menit/Z
         function formatDate(dateString) {
             if (!dateString) return '';
-            // Jika berbentuk objek tanggal atau ISO string, potong bagian jamnya
+            
+            // Jika string mengandung huruf 'T' (format ISO dari Spreadsheet), ambil bagian depannya saja
+            let str = dateString.toString();
+            if (str.includes('T')) {
+                return str.split('T')[0];
+            }
+            
             let d = new Date(dateString);
             if (!isNaN(d.getTime())) {
                 let year = d.getFullYear();
@@ -112,8 +123,7 @@
                 let day = String(d.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
             }
-            // Jika sudah teks biasa, ambil bagian depannya saja sebelum spasi (jika ada)
-            return dateString.toString().split('T')[0].split(' ')[0];
+            return str.split(' ')[0];
         }
 
         document.getElementById('crudForm').addEventListener('submit', function(e) {
