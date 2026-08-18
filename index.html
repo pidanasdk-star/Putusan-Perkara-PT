@@ -68,7 +68,7 @@
     </div>
 
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbyxj-HuqiK95WaQe9DWcqAYa82tWBPIFSs-kExvCVYJ_YPHuwAVYUZyJT8L7sLIiVnZ9Q/exec'; // Masukkan URL Web App Google Apps Script di sini
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyxj-HuqiK95WaQe9DWcqAYa82tWBPIFSs-kExvCVYJ_YPHuwAVYUZyJT8L7sLIiVnZ9Q/exec';
 
         document.getElementById('crudForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -93,7 +93,10 @@
                 resetForm();
                 loadData();
             })
-            .catch(error => console.error('Error!', error.message));
+            .catch(error => {
+                console.error('Error!', error.message);
+                alert('Terjadi kesalahan saat menyimpan data.');
+            });
         });
 
         function loadData() {
@@ -101,37 +104,43 @@
             .then(response => response.json())
             .then(data => {
                 let rows = '';
-                if (data.length === 0) {
+                if (!data || data.length === 0) {
                     rows = '<tr><td colspan="6" class="text-center">Belum ada data</td></tr>';
                 } else {
                     data.forEach(item => {
+                        let itemString = JSON.stringify(item).replace(/"/g, '&quot;');
                         rows += `<tr>
-                            <td>${item['No Perkara']}</td>
-                            <td>${item['Nama Terdakwa']}</td>
-                            <td>${item['Tanggal Putusan PT']}</td>
-                            <td>${item['Tanggal Perubahan Putusan PT']}</td>
-                            <td>${item['Keterangan']}</td>
+                            <td>${item['No Perkara'] || ''}</td>
+                            <td>${item['Nama Terdakwa'] || ''}</td>
+                            <td>${item['Tanggal Putusan PT'] || ''}</td>
+                            <td>${item['Tanggal Perubahan Putusan PT'] || ''}</td>
+                            <td>${item['Keterangan'] || ''}</td>
                             <td>
-                                <button class="btn btn-warning btn-sm mb-1" onclick='editData(${JSON.stringify(item)})'>Edit</button>
+                                <button class="btn btn-warning btn-sm mb-1" onclick='editData(${itemString})'>Edit</button>
                                 <button class="btn btn-danger btn-sm mb-1" onclick="deleteData('${item['ID']}')">Hapus</button>
                             </td>
                         </tr>`;
                     });
                 }
                 document.getElementById('table-data').innerHTML = rows;
+            })
+            .catch(error => {
+                console.error('Error loading data:', error);
+                document.getElementById('table-data').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Gagal memuat data</td></tr>';
             });
         }
 
         function editData(item) {
-            document.getElementById('id').value = item['ID'];
-            document.getElementById('no_perkara').value = item['No Perkara'];
-            document.getElementById('nama_terdakwa').value = item['Nama Terdakwa'];
-            document.getElementById('tanggal_putusan_pt').value = item['Tanggal Putusan PT'];
-            document.getElementById('tanggal_perubahan_pt').value = item['Tanggal Perubahan Putusan PT'];
-            document.getElementById('keterangan').value = item['Keterangan'];
+            document.getElementById('id').value = item['ID'] || '';
+            document.getElementById('no_perkara').value = item['No Perkara'] || '';
+            document.getElementById('nama_terdakwa').value = item['Nama Terdakwa'] || '';
+            document.getElementById('tanggal_putusan_pt').value = item['Tanggal Putusan PT'] || '';
+            document.getElementById('tanggal_perubahan_pt').value = item['Tanggal Perubahan Putusan PT'] || '';
+            document.getElementById('keterangan').value = item['Keterangan'] || '';
             
             document.getElementById('form-title').innerText = 'Edit Data Perkara';
             document.getElementById('save-btn').innerText = 'Update';
+            document.getElementById('save-btn').className = 'btn btn-warning';
             document.getElementById('cancel-btn').style.display = 'inline-block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -141,6 +150,7 @@
             document.getElementById('id').value = '';
             document.getElementById('form-title').innerText = 'Tambah Data Baru';
             document.getElementById('save-btn').innerText = 'Simpan';
+            document.getElementById('save-btn').className = 'btn btn-success';
             document.getElementById('cancel-btn').style.display = 'none';
         }
 
@@ -154,7 +164,8 @@
                 .then(result => {
                     alert('Data berhasil dihapus!');
                     loadData();
-                });
+                })
+                .catch(error => console.error('Error deleting:', error));
             }
         }
 
