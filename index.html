@@ -1,106 +1,164 @@
-<script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyxj-HuqiK95WaQe9DWcqAYa82tWBPIFSs-kExvCVYJ_YPHuwAVYUZyJT8L7sLIiVnZ9Q/exec'; // Ganti dengan Web App URL Anda
-
-    document.getElementById('crudForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const id = document.getElementById('id').value;
-        const data = {
-            action: id ? 'update' : 'create',
-            id: id,
-            no_perkara: document.getElementById('no_perkara').value,
-            nama_terdakwa: document.getElementById('nama_terdakwa').value,
-            tanggal_putusan_pt: document.getElementById('tanggal_putusan_pt').value,
-            tanggal_perubahan_pt: document.getElementById('tanggal_perubahan_pt').value,
-            keterangan: document.getElementById('keterangan').value
-        };
-
-        fetch(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(result => {
-            alert('Data berhasil disimpan!');
-            resetForm();
-            loadData();
-        })
-        .catch(error => {
-            console.error('Error!', error.message);
-            alert('Terjadi kesalahan saat menyimpan data.');
-        });
-    });
-
-    function loadData() {
-        fetch(scriptURL + '?action=read')
-        .then(response => response.json())
-        .then(data => {
-            let rows = '';
-            if (!data || data.length === 0) {
-                rows = '<tr><td colspan="6" class="text-center">Belum ada data</td></tr>';
-            } else {
-                data.forEach(item => {
-                    // Menggunakan atribut aman untuk melewatkan objek data ke fungsi edit
-                    let itemString = JSON.stringify(item).replace(/"/g, '&quot;');
-                    rows += `<tr>
-                        <td>${item['No Perkara'] || ''}</td>
-                        <td>${item['Nama Terdakwa'] || ''}</td>
-                        <td>${item['Tanggal Putusan PT'] || ''}</td>
-                        <td>${item['Tanggal Perubahan Putusan PT'] || ''}</td>
-                        <td>${item['Keterangan'] || ''}</td>
-                        <td>
-                            <button class="btn btn-warning btn-sm mb-1" onclick='editData(${itemString})'>Edit</button>
-                            <button class="btn btn-danger btn-sm mb-1" onclick="deleteData('${item['ID']}')">Hapus</button>
-                        </td>
-                    </tr>`;
-                });
-            }
-            document.getElementById('table-data').innerHTML = rows;
-        })
-        .catch(error => {
-            console.error('Error loading data:', error);
-            document.getElementById('table-data').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Gagal memuat data</td></tr>';
-        });
-    }
-
-    function editData(item) {
-        document.getElementById('id').value = item['ID'] || '';
-        document.getElementById('no_perkara').value = item['No Perkara'] || '';
-        document.getElementById('nama_terdakwa').value = item['Nama Terdakwa'] || '';
-        document.getElementById('tanggal_putusan_pt').value = item['Tanggal Putusan PT'] || '';
-        document.getElementById('tanggal_perubahan_pt').value = item['Tanggal Perubahan Putusan PT'] || '';
-        document.getElementById('keterangan').value = item['Keterangan'] || '';
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi CRUD - Database Spreadsheet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container my-5">
+        <h2 class="mb-4 text-center">Manajemen Data Putusan Perkara</h2>
         
-        document.getElementById('form-title').innerText = 'Edit Data Perkara';
-        document.getElementById('save-btn').innerText = 'Update';
-        document.getElementById('save-btn').className = 'btn btn-warning';
-        document.getElementById('cancel-btn').style.display = 'inline-block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+        <!-- Form Input & Edit -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white" id="form-title">Tambah Data Baru</div>
+            <div class="card-body">
+                <form id="crudForm">
+                    <input type="hidden" id="id">
+                    <div class="mb-3">
+                        <label class="form-label">No Perkara</label>
+                        <input type="text" class="form-control" id="no_perkara" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nama Terdakwa</label>
+                        <input type="text" class="form-control" id="nama_terdakwa" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tanggal Putusan PT</label>
+                        <input type="date" class="form-control" id="tanggal_putusan_pt" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tanggal Perubahan Putusan PT</label>
+                        <input type="date" class="form-control" id="tanggal_perubahan_pt">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Keterangan</label>
+                        <textarea class="form-control" id="keterangan"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success" id="save-btn">Simpan</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()" id="cancel-btn" style="display:none;">Batal</button>
+                </form>
+            </div>
+        </div>
 
-    function resetForm() {
-        document.getElementById('crudForm').reset();
-        document.getElementById('id').value = '';
-        document.getElementById('form-title').innerText = 'Tambah Data Baru';
-        document.getElementById('save-btn').innerText = 'Simpan';
-        document.getElementById('save-btn').className = 'btn btn-success';
-        document.getElementById('cancel-btn').style.display = 'none';
-    }
+        <!-- Tabel Tampilan Data -->
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">Daftar Data Perkara</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>No Perkara</th>
+                                <th>Nama Terdakwa</th>
+                                <th>Tanggal Putusan PT</th>
+                                <th>Tanggal Perubahan Putusan PT</th>
+                                <th>Keterangan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-data">
+                            <tr><td colspan="6" class="text-center">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    function deleteData(id) {
-        if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+    <script>
+        const scriptURL = 'URL_WEB_APP_ANDA'; // Masukkan URL Web App Google Apps Script di sini
+
+        document.getElementById('crudForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('id').value;
+            const data = {
+                action: id ? 'update' : 'create',
+                id: id,
+                no_perkara: document.getElementById('no_perkara').value,
+                nama_terdakwa: document.getElementById('nama_terdakwa').value,
+                tanggal_putusan_pt: document.getElementById('tanggal_putusan_pt').value,
+                tanggal_perubahan_pt: document.getElementById('tanggal_perubahan_pt').value,
+                keterangan: document.getElementById('keterangan').value
+            };
+
             fetch(scriptURL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'delete', id: id })
+                body: JSON.stringify(data)
             })
             .then(response => response.json())
             .then(result => {
-                alert('Data berhasil dihapus!');
+                alert('Data berhasil disimpan!');
+                resetForm();
                 loadData();
             })
-            .catch(error => console.error('Error deleting:', error));
-        }
-    }
+            .catch(error => console.error('Error!', error.message));
+        });
 
-    // Panggil fungsi loadData saat pertama kali halaman dibuka
-    loadData();
-</script>
+        function loadData() {
+            fetch(scriptURL + '?action=read')
+            .then(response => response.json())
+            .then(data => {
+                let rows = '';
+                if (data.length === 0) {
+                    rows = '<tr><td colspan="6" class="text-center">Belum ada data</td></tr>';
+                } else {
+                    data.forEach(item => {
+                        rows += `<tr>
+                            <td>${item['No Perkara']}</td>
+                            <td>${item['Nama Terdakwa']}</td>
+                            <td>${item['Tanggal Putusan PT']}</td>
+                            <td>${item['Tanggal Perubahan Putusan PT']}</td>
+                            <td>${item['Keterangan']}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm mb-1" onclick='editData(${JSON.stringify(item)})'>Edit</button>
+                                <button class="btn btn-danger btn-sm mb-1" onclick="deleteData('${item['ID']}')">Hapus</button>
+                            </td>
+                        </tr>`;
+                    });
+                }
+                document.getElementById('table-data').innerHTML = rows;
+            });
+        }
+
+        function editData(item) {
+            document.getElementById('id').value = item['ID'];
+            document.getElementById('no_perkara').value = item['No Perkara'];
+            document.getElementById('nama_terdakwa').value = item['Nama Terdakwa'];
+            document.getElementById('tanggal_putusan_pt').value = item['Tanggal Putusan PT'];
+            document.getElementById('tanggal_perubahan_pt').value = item['Tanggal Perubahan Putusan PT'];
+            document.getElementById('keterangan').value = item['Keterangan'];
+            
+            document.getElementById('form-title').innerText = 'Edit Data Perkara';
+            document.getElementById('save-btn').innerText = 'Update';
+            document.getElementById('cancel-btn').style.display = 'inline-block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('crudForm').reset();
+            document.getElementById('id').value = '';
+            document.getElementById('form-title').innerText = 'Tambah Data Baru';
+            document.getElementById('save-btn').innerText = 'Simpan';
+            document.getElementById('cancel-btn').style.display = 'none';
+        }
+
+        function deleteData(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+                fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete', id: id })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    alert('Data berhasil dihapus!');
+                    loadData();
+                });
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
